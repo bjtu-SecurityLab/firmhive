@@ -1,0 +1,9 @@
+*.pyc
+assets/.DS_Store
+/eval
+/results
+/total-result
+/scripts
+/artifacts-back
+.DS_Store
+config.ini

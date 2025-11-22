@@ -1,0 +1,44 @@
+[common]
+
+active_model = deepseek
+active_vision_model = aliyunvl
+
+[openai]
+# OpenAI API
+model = gpt-4o
+api_key = sk-
+base_url = https://api.openai.com/v1
+temperature = 0.0
+max_tokens = 1500
+# timeout = 60
+
+[deepseek]
+# DeepSeek API
+model = deepseek-chat
+api_key = sk-
+base_url = https://api.deepseek.com
+temperature = 0.0
+
+[aliyun]
+model = qwen-plus
+api_key = sk-
+base_url = https://dashscope.aliyuncs.com/compatible-mode/v1
+temperature = 0
+enable_thinking = True
+
+
+[anthropic]
+# Anthropic Claude（via OpenRouter）
+model = anthropic/claude-3.7-sonnet
+api_key = sk-or-
+org_id = org-
+project_id = proj_
+base_url = https://openrouter.ai/api/v1
+temperature = 0.0
+max_tokens = 1500
+
+[tavily]
+api_key = tvly-
+
+[logging]
+level = INFO
