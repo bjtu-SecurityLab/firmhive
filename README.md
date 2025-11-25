@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Paper](https://img.shields.io/badge/Paper-Under%20Review-orange.svg)]()
+[![Paper](https://img.shields.io/badge/Paper-Arxiv-orange.svg)](https://arxiv.org/abs/2511.18438)
 
 **A Runtime-Grown Tree-of-Agents Framework for Firmware Security Analysis**
 
@@ -14,7 +14,21 @@
 
 ## 📄 Paper
 
-**LLMs as Firmware Experts: A Runtime-Grown Tree-of-Agents Framework for Firmware Security Analysis** *(Under Review)*
+**LLMs as Firmware Experts: A Runtime-Grown Tree-of-Agents Framework for Firmware Security Analysis** — Xiangrui Zhang, Zeyu Chen, Haining Wang, Qiang Li. arXiv:2511.18438 (2025). [paper](https://arxiv.org/abs/2511.18438)
+
+BibTeX：
+
+```bibtex
+@misc{zhang2025llmsfirmwareexpertsruntimegrown,
+  title={LLMs as Firmware Experts: A Runtime-Grown Tree-of-Agents Framework}, 
+  author={Xiangrui Zhang and Zeyu Chen and Haining Wang and Qiang Li},
+  year={2025},
+  eprint={2511.18438},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/2511.18438}, 
+}
+```
 
 ---
 
