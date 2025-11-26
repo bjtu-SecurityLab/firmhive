@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Paper](https://img.shields.io/badge/Paper-Under%20Review-orange.svg)]()
+[![Paper](https://img.shields.io/badge/Paper-Arxiv-orange.svg)](https://arxiv.org/abs/2511.18438)
 
 **A Runtime-Grown Tree-of-Agents Framework for Firmware Security Analysis**
 
@@ -14,9 +14,21 @@
 
 ## 📄 Paper
 
-**LLMs as Firmware Experts: A Runtime-Grown Tree-of-Agents Framework for Firmware Security Analysis** *(Under Review)*
+**LLMs as Firmware Experts: A Runtime-Grown Tree-of-Agents Framework for Firmware Security Analysis** — Xiangrui Zhang, Zeyu Chen, Haining Wang, Qiang Li. arXiv:2511.18438 (2025). [paper](https://arxiv.org/abs/2511.18438)
 
----
+BibTeX：
+
+```bibtex
+@misc{zhang2025llmsfirmwareexpertsruntimegrown,
+  title={LLMs as Firmware Experts: A Runtime-Grown Tree-of-Agents Framework}, 
+  author={Xiangrui Zhang and Zeyu Chen and Haining Wang and Qiang Li},
+  year={2025},
+  eprint={2511.18438},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/2511.18438}, 
+}
+```
 
 ## Contents
 
@@ -97,7 +109,6 @@ FirmwareHive implements ToA through two cooperating modules:
 - **Recursive Delegation Engine (RDE)**: Dynamically generates and coordinates agents based on firmware structure, decomposing monolithic reasoning chains into structured parallel workflows.
 
 - **Proactive Knowledge Hub (PKH)**: Acts as persistent global memory, continuously aggregating and reconciling intermediate results to preserve semantic continuity and prevent redundant exploration.
-
 
 
 ## Blueprint Examples (A/B/C)
@@ -276,6 +287,43 @@ sequenceDiagram
     C2-->>B: result(u2)
     B-->>A: aggregate(S)
 ```
+
+## Background Tasks (run_in_background)
+
+FirmwareHive includes an experimental background-execution mechanism for tools. It
+allows the LLM to offload long-running subtasks to background agents while the main
+reasoning loop continues, and then automatically merge results when they complete.
+
+- How it works
+  - Some assistant-style tools declare a boolean parameter `run_in_background` in
+    their JSON schema (for example directory/file/function delegators).
+  - When the LLM calls such a tool with `{"run_in_background": true, ...}` in
+    `action_input`, the tool marks that invocation as a background task
+    (via an `is_background_task` flag).
+  - `BaseAgent` detects this flag and launches the tool via `asyncio.create_task(...)`,
+    storing the task in an internal `background_tasks` map instead of blocking.
+  - A periodic check injects results of completed background tasks back into the
+    conversation as `background_tool_result` messages. The LLM can issue a `wait`
+    action when it needs all background results before proceeding to the final
+    `finish`.
+
+- Why it exists
+  - To support deeper, tree-structured orchestration where:
+    - Heavy subtasks (large directories, deep file/function analysis) run in the
+      background.
+    - The top-level planner keeps exploring and coordinating other branches.
+    - Before summarizing, the agent explicitly synchronizes on background tasks so
+      the final report is predictable and complete.
+
+- Experimental status
+  - This feature is **experimental** and mainly intended for research on autonomous
+    scheduling and multi-layer ToA execution.
+  - It introduces additional complexity (concurrency, ordering, result merging) and
+    may not be desirable in simple or strictly deterministic pipelines.
+  - **If you do not need background execution, remove the `run_in_background` field
+    from your tool schemas.** Without that parameter, the LLM will not attempt to
+    schedule that tool asynchronously, and all tool calls will run in the foreground.
+
 
 ---
 
