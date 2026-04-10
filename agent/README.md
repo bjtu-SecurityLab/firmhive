@@ -68,22 +68,22 @@ graph TD
 
 魔法来源于几个简单的核心组件：
 
-* `src/hivemind/base.py`
+* `agent/basellm.py` / `agent/jsonoutputllm.py` / `agent/baseagent.py`
   * `BaseLLM` / `JSONOutputLLM`：封装与 LLM 的 JSON 协议交互与解析。
   * `BaseAgent`：实现 ReAct 风格的多轮工具调用循环、后台任务以及流式输出。
-* `src/hivemind/tools/basetool.py`
+* `agent/basetool.py` / `agent/context.py`
   * `ExecutableTool`：所有工具的基类，定义 `name / description / parameters / execute` 等接口。
   * `FlexibleContext`：在智能体与工具之间共享状态的轻量级上下文容器（支持深/浅拷贝）。
-* `src/hivemind/core/builder.py`
+* `agent/core/builder.py`
   * `AgentConfig`：声明一个智能体实例的“蓝图”（类、工具列表、系统提示、最大轮数等）。
   * `AssistantToolConfig`：把“子智能体蓝图”包装成一个工具，供父智能体在运行时委派。
   * `build_agent` / `build_assistant`：根据配置构建真正可运行的智能体与委派工具。
-* `src/hivemind/core/assistants.py`
+* `agent/core/assistants.py`
   * `BaseAssistant`：串行委派助手，一次处理一个子任务。
   * `ParallelBaseAssistant`：并行委派助手，一次分发多个子任务，由多个子智能体并发处理。
-* `src/hivemind/llmclient.py`
+* `agent/llmclient.py`
   * `LLMClient`：统一封装 OpenAI / DeepSeek / 阿里云通义等提供方，支持文本与多模态模型，自动从 `config.ini` 与环境变量加载配置。
-* `src/hivemind/historystrategy.py`
+* `agent/historystrategy.py`
   * `HistoryStrategy` 及其子类 `KeepLastN`、`CompactToolHistory` 等，用于裁剪对话历史、压缩工具结果。
 
 ## ⚙️ 安装与配置
@@ -107,7 +107,7 @@ cp config.ini.template config.ini  # 填写各家 API Key
 LLM 联通性快速自检（确保配置无误）：
 
 ```bash
-PYTHONPATH=src python -m hivemind.llmclient
+python -m agent.llmclient
 ```
 
 ## 🐣 最小示例：单智能体 + 自定义工具
@@ -115,8 +115,9 @@ PYTHONPATH=src python -m hivemind.llmclient
 下面用一个简单的 `EchoTool` 展示如何把普通 Python 函数包装成工具，并交给 `BaseAgent` 调度：
 
 ```python
-from hivemind.base import BaseAgent
-from hivemind.tools.basetool import ExecutableTool, FlexibleContext
+from agent.baseagent import BaseAgent
+from agent.basetool import ExecutableTool
+from agent.context import FlexibleContext
 
 class EchoTool(ExecutableTool):
     name = "echo"
@@ -165,7 +166,7 @@ print(result)
 你可以把某些工具标记为后台工具（例如长耗时分析）：
 
 ```python
-from hivemind.tools.basetool import ExecutableTool
+from agent.basetool import ExecutableTool
 
 class LongJobTool(ExecutableTool):
     name = "long_job"
@@ -196,10 +197,10 @@ class LongJobTool(ExecutableTool):
 
 **关键 API**
 
-- `hivemind/core/builder.py`:
+- `agent/core/builder.py`:
   - `AgentConfig`：定义一个智能体（其类、工具列表、系统提示、迭代上限）。
   - `AssistantToolConfig`：把“子智能体蓝图”包装成一个工具，供父智能体在运行时委派工作。
-- `hivemind/core/assistants.py`:
+- `agent/core/assistants.py`:
   - `BaseAssistant`：串行委派助手。
   - `ParallelBaseAssistant`：并行委派助手。
 
@@ -231,9 +232,9 @@ classDiagram
 意图：A 负责规划任务并把子任务委托给 B；B 为终端执行者，只包含工具，不再向下委派。
 
 ```python
-from hivemind.core.builder import AgentConfig, AssistantToolConfig, build_agent
-from hivemind.core.assistants import BaseAssistant
-from hivemind.tools.basetool import FlexibleContext
+from agent.core.builder import AgentConfig, AssistantToolConfig, build_agent
+from agent.core.assistants import BaseAssistant
+from agent.context import FlexibleContext
 
 from your_project.agents import PlannerAgent, WorkerAgent
 from your_project.tools import DEFAULT_WORKER_TOOL_CLASSES
@@ -293,9 +294,9 @@ flowchart TD
 意图：A 把大范围任务交给 B；B 再把更细粒度的工作切成多个单元并交给 C，并行加速。
 
 ```python
-from hivemind.core.builder import AgentConfig, AssistantToolConfig, build_agent
-from hivemind.core.assistants import BaseAssistant, ParallelBaseAssistant
-from hivemind.tools.basetool import FlexibleContext
+from agent.core.builder import AgentConfig, AssistantToolConfig, build_agent
+from agent.core.assistants import BaseAssistant, ParallelBaseAssistant
+from agent.context import FlexibleContext
 
 from your_project.agents import PlannerAgent, WorkerAgent
 from your_project.tools import DEFAULT_WORKER_TOOL_CLASSES
@@ -376,7 +377,7 @@ flowchart TD
 
 ```python
 # your_project/agents.py
-from hivemind.base import BaseAgent
+from agent.baseagent import BaseAgent
 
 class PlannerAgent(BaseAgent):
     def __init__(self, *args, **kwargs):
@@ -396,7 +397,7 @@ class WorkerAgent(BaseAgent):
 ```python
 # your_project/tools.py
 import os
-from hivemind.tools.basetool import ExecutableTool
+from agent.basetool import ExecutableTool
 
 class ListFilesTool(ExecutableTool):
     name = "list_files"
@@ -433,9 +434,9 @@ DEFAULT_WORKER_TOOL_CLASSES = [ReadFileTool]
 
 ```python
 # your_project/blueprints_repo_analysis.py
-from hivemind.core.builder import AgentConfig, AssistantToolConfig, build_agent
-from hivemind.core.assistants import BaseAssistant, ParallelBaseAssistant
-from hivemind.tools.basetool import FlexibleContext
+from agent.core.builder import AgentConfig, AssistantToolConfig, build_agent
+from agent.core.assistants import BaseAssistant, ParallelBaseAssistant
+from agent.context import FlexibleContext
 
 from your_project.agents import PlannerAgent, WorkerAgent
 from your_project.tools import ListFilesTool, DEFAULT_WORKER_TOOL_CLASSES
